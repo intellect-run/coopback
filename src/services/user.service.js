@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
-
+const { registerBlockchainAccount } = require('./blockchain.service')
 /**
  * Create a user
  * @param {Object} userBody
@@ -11,8 +11,13 @@ const createUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
+  
+  await registerBlockchainAccount(userBody.username, userBody.referer, userBody.public_key, userBody.signature_hash, userBody.signed_doc)
+  
   return User.create(userBody);
 };
+
+
 
 /**
  * Query for users
@@ -29,12 +34,12 @@ const queryUsers = async (filter, options) => {
 };
 
 /**
- * Get user by id
- * @param {ObjectId} id
+ * Get user by username
+ * @param {ObjectId} username
  * @returns {Promise<User>}
  */
-const getUserById = async (id) => {
-  return User.findById(id);
+const getUserByUsername = async (username) => {
+  return User.findOne({username});
 };
 
 /**
@@ -47,17 +52,17 @@ const getUserByEmail = async (email) => {
 };
 
 /**
- * Update user by id
- * @param {ObjectId} userId
+ * Update user by username
+ * @param {ObjectId} username
  * @param {Object} updateBody
  * @returns {Promise<User>}
  */
-const updateUserById = async (userId, updateBody) => {
-  const user = await getUserById(userId);
+const updateUserById = async (username, updateBody) => {
+  const user = await getUserByUsername(username);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  if (updateBody.email && (await User.isEmailTaken(updateBody.email, userId))) {
+  if (updateBody.email && (await User.isEmailTaken(updateBody.email, username))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   Object.assign(user, updateBody);
@@ -67,11 +72,11 @@ const updateUserById = async (userId, updateBody) => {
 
 /**
  * Delete user by id
- * @param {ObjectId} userId
+ * @param {ObjectId} username
  * @returns {Promise<User>}
  */
-const deleteUserById = async (userId) => {
-  const user = await getUserById(userId);
+const deleteUserById = async (username) => {
+  const user = await getUserByUsername(username);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
@@ -82,7 +87,7 @@ const deleteUserById = async (userId) => {
 module.exports = {
   createUser,
   queryUsers,
-  getUserById,
+  getUserByUsername,
   getUserByEmail,
   updateUserById,
   deleteUserById,

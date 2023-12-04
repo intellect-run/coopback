@@ -1,16 +1,27 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, tokenService, emailService } = require('../services');
+const { orderService } = require('../services');
 
 const register = catchAsync(async (req, res) => {
+
+  console.log("on create User")
+  
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
-  res.status(httpStatus.CREATED).send({ user, tokens });
+  
+  const order = await orderService.createInitialOrder(req.body.username);
+
+  res.status(httpStatus.CREATED).send({user, tokens, order});
 });
 
 const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const user = await authService.loginUserWithEmailAndPassword(email, password);
+
+  if (user.is_registered === false)
+    throw new Error('Аккаунт в блокчейне для пользователя не зарегистрирован (или не оплачен)')
+
   const tokens = await tokenService.generateAuthTokens(user);
   res.send({ user, tokens });
 });
@@ -41,6 +52,7 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
   await emailService.sendVerificationEmail(req.user.email, verifyEmailToken);
   res.status(httpStatus.NO_CONTENT).send();
 });
+
 
 const verifyEmail = catchAsync(async (req, res) => {
   await authService.verifyEmail(req.query.token);

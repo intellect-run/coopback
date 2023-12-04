@@ -5,7 +5,27 @@ const register = {
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().custom(password),
-    name: Joi.string().required(),
+    username: Joi.string().required(),
+    public_key: Joi.string().required(),
+    referer: Joi.string().allow(null, ''),
+    signature: Joi.string().required().regex(/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/),
+    signature_hash: Joi.string().required(),
+    is_organization: Joi.boolean().required(),
+    user_profile: Joi.object().keys({
+      first_name: Joi.string().required(),
+      last_name: Joi.string().required(),
+      middle_name: Joi.string().required(),
+      birthday: Joi.string().required(),
+      phone: Joi.string().required(),
+    }),
+    organization_profile: Joi.object().keys({
+      
+    }),
+    signed_doc: Joi.object().keys({
+      hash: Joi.string().required(),
+      sign: Joi.string().required(),
+      pkey: Joi.string().required()
+    })
   }),
 };
 

@@ -6,10 +6,23 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
+    },
+    public_key: {
+      type: String,
+      required: true
+    },
+    referer: {
+      type: String,
+      default: ""
+    },
+    is_registered: {
+      type: Boolean,
+      default: false
     },
     email: {
       type: String,
@@ -40,10 +53,44 @@ const userSchema = mongoose.Schema(
       enum: roles,
       default: 'user',
     },
-    isEmailVerified: {
+    is_email_verified: {
       type: Boolean,
       default: false,
     },
+    is_organization: {
+      type: Boolean,
+      default: false
+    },
+    user_profile: {
+      first_name: {
+        type: String,
+      },
+      last_name: {
+        type: String,
+      },
+      middle_name: {
+        type: String,
+      },
+      birthday: {
+        type: String,
+      },
+      phone: {
+        type: String,
+      },
+    },
+    organization_profile: {
+
+    },
+    signature: {
+      type: String,
+      required: true,
+      private: true
+    },
+    signature_hash: {
+      type: String,
+      required: true,
+      private: true
+    }
   },
   {
     timestamps: true,
@@ -57,11 +104,11 @@ userSchema.plugin(paginate);
 /**
  * Check if email is taken
  * @param {string} email - The user's email
- * @param {ObjectId} [excludeUserId] - The id of the user to be excluded
+ * @param {ObjectId} [excludeUsername] - The id of the user to be excluded
  * @returns {Promise<boolean>}
  */
-userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
-  const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
+userSchema.statics.isEmailTaken = async function (email, excludeUsername) {
+  const user = await this.findOne({ email, _id: { $ne: excludeUsername } });
   return !!user;
 };
 
