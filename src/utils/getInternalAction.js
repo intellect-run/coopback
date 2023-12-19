@@ -2,6 +2,7 @@ function getInternalAction(data, actionName) {
   // Вспомогательная функция для рекурсивного поиска
   function searchTraces(traces) {
     for (const trace of traces) {
+      
       if (trace.act.name === actionName) {
         return trace.act.data; // Предполагается, что вам нужны данные, а не сам act
       }

@@ -9,15 +9,15 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const userService = require('./user.service');
 
-async function createInitialOrder(username) {
+async function createInitialOrder(username, batch_id) {
  try {
 
   // 1. Создаёшь ордер в базе и получаешь внутренний айди
-  const db_order = await Order.create({creator: process.env.REGISTRATOR, type: 'initial', data: {username}})
+  const db_order = await Order.create({creator: process.env.COOPNAME, type: 'initial', data: {username}})
   const internal_id = db_order._id
 
   // 1.5 Получаешь сумму счёта
-  let cooperative = await blockchainService.getCooperative(process.env.REGISTRATOR)
+  let cooperative = await blockchainService.getCooperative(process.env.COOPNAME)
 
   if (!cooperative)
     throw new Error('Кооператив не найден')
@@ -49,10 +49,11 @@ async function createInitialOrder(username) {
 
   // 3. Используешь ссылку для создания ордера по блокчейну
   const order = {
-    creator: process.env.REGISTRATOR,
+    creator: process.env.COOPNAME,
     username: username,
-    coopname: process.env.REGISTRATOR,
+    coopname: process.env.COOPNAME,
     program_id: 0,
+    batch_id,
     type: "initial",
     secondary_id: 0,
     internal_quantity: amount,

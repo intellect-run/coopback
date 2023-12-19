@@ -1,7 +1,7 @@
 const nunjucks = require('nunjucks');
 const ecc = require('eosjs-ecc');
 const html_to_pdf = require('html-pdf-node');
-
+const { PDFDocument } = require('pdf-lib');
 const { jsPDF } = require('jspdf');
 
 class TransExtension {
@@ -28,10 +28,15 @@ function createEnv(translation) {
 
     env.addFilter('date', function(date, format) {
         const d = new Date(date);
-        if (format === 'c') {
-            return d.toISOString();
-        }
-        return d.toString();
+        
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0'); // Месяцы начинаются с 0
+        const year = d.getFullYear();
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+        // return d.toString();
     });
 
     return env;
@@ -39,8 +44,11 @@ function createEnv(translation) {
 
 function getBodyContent(draft, vars, translation) {
     const htmlString = renderTemplate(draft, vars, translation)
-    const match = /<body[^>]*>((.|[\n\r])*)<\/body>/im.exec(htmlString);
-    return (match && match[1]) ? match[1].trim() : '';
+    return htmlString
+}
+
+function getBody(content) {
+    return content
 }
 
 async function fetchFont(url) {
@@ -101,24 +109,46 @@ async function downloadPDF(draft, vars, translation, filename = 'document.pdf') 
 }
 
 
-async function convertToPDF(content) {
+async function updateMetadata(pdfBuffer, meta) {
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    
+    // pdfDoc.setAuthor(meta.author)
+    // pdfDoc.setKeywords([meta.lang])
+    // pdfDoc.setProducer('PDF App 9000 🤖')
+
+    pdfDoc.setTitle(meta.title)
+    pdfDoc.setSubject(meta.lang)
+    pdfDoc.setCreator(`coopjs-pdf ${meta.version}`)
+    pdfDoc.setCreationDate(meta.created_at)
+    pdfDoc.setModificationDate(meta.created_at)
+
+    return await pdfDoc.save();
+}
+
+async function convertToPDF(content, meta) {
+    console.log("meta on convert: ", meta)
+
     return new Promise(async (resolve, reject) => {
         try {
             const html_to_pdf = require('html-pdf-node');
             
-            let options = { format: 'A4', margin: {
-                top: 10,
-                bottom: 10,
-                left: 10,
-                right: 10
-            }};
+            let options = { 
+                format: 'A4', 
+                margin: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 10
+                },
+                headerTemplate: "",
+            };
             
             let file = {content}
-            // let file = { content: "<h1>Welcome to html-pdf-node</h1>" };
+            
+            const pdfBuffer = await html_to_pdf.generatePdf(file, options)
+            const cleanPDFBuffer = await updateMetadata(pdfBuffer, meta)
+            resolve(cleanPDFBuffer)
 
-            html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-              resolve(pdfBuffer)
-            });
 
         } catch (err) {
             reject(err);
@@ -128,4 +158,4 @@ async function convertToPDF(content) {
 
 
 
-module.exports = { renderTemplate, getBodyContent, downloadPDF, convertToPDF, getPDFHash }
+module.exports = { renderTemplate, getBodyContent, downloadPDF, convertToPDF, getPDFHash, getBody }

@@ -77,6 +77,9 @@ const userSchema = mongoose.Schema(
       phone: {
         type: String,
       },
+      email: {
+        type: String,
+      }
     },
     organization_profile: {
 

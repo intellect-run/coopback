@@ -2,10 +2,17 @@ const mongoose = require('mongoose');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
+const authService = require('./services/auth.service')
 
 let server;
+
+
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
+  logger.info('Update soviet auth');
+  
+  authService.updateAuth()
+
   server = app.listen(config.port, () => {
     logger.info(`Listening to port ${config.port}`);
   });

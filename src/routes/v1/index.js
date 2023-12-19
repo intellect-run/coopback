@@ -3,6 +3,7 @@ const authRoute = require('./auth.route');
 const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
 const orderRoute = require('./order.route');
+const coopRoute = require('./coop.route');
 
 const documentRoute = require('./document.route');
 
@@ -26,6 +27,10 @@ const defaultRoutes = [
   {
     path: '/orders',
     route: orderRoute,
+  },
+  {
+    path: '/coop',
+    route: coopRoute,
   },
 ];
 

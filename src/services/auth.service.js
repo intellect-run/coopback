@@ -1,20 +1,60 @@
 const httpStatus = require('http-status');
 const tokenService = require('./token.service');
 const userService = require('./user.service');
+const blockchainService = require('./blockchain.service');
 const Token = require('../models/token.model');
 const ApiError = require('../utils/ApiError');
 const { tokenTypes } = require('../config/tokens');
 
+
+
+const updateAuth = async () => {
+  const board = await blockchainService.getSoviet(process.env.COOPNAME);
+  
+  //TODO снимать права с тех, кто уже не в совете
+
+  for (const member of board.members) {
+    const user = await userService.getUserByUsername(member.username);   
+
+    if (member.position == 'chairman' && !user){
+      const user = await userService.createUser({
+        username: member.username,
+        public_key: "-",
+        email: process.env.CHAIRMAN_EMAIL,
+        password: process.env.CHAIRAN_PASSWORD,
+        is_registered: true,
+        is_organization: false,
+        user_profile: {
+          first_name: 'Имя',
+          last_name: "Фамилия",
+          middle_name: "Отчество",
+          birthday: "23-42-3423",
+          phone: "7902294404",
+        },
+        signature: '-',
+        signature_hash: '-',
+        role: 'superadmin'
+      });    
+    } else if (member.position == 'chairman' && user){
+      user.role = 'superadmin'
+      await user.save()
+    } else if (user){
+      user.role = 'admin'
+      await user.save()
+    }
+  }
+}
+
 /**
  * Login with username and password
- * @param {string} email
+ * @param {string} username
  * @param {string} password
  * @returns {Promise<User>}
  */
-const loginUserWithEmailAndPassword = async (email, password) => {
-  const user = await userService.getUserByEmail(email);
+const loginUserWithUsernameAndPassword = async (username, password) => {
+  const user = await userService.getUserByUsername(username);
   if (!user || !(await user.isPasswordMatch(password))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect username or password');
   }
   return user;
 };
@@ -93,9 +133,10 @@ const verifyEmail = async (verifyEmailToken) => {
 };
 
 module.exports = {
-  loginUserWithEmailAndPassword,
+  loginUserWithUsernameAndPassword,
   logout,
   refreshAuth,
   resetPassword,
   verifyEmail,
+  updateAuth
 };

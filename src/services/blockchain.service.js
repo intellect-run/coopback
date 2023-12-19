@@ -56,24 +56,29 @@ async function getCooperative(coopname){
 
 
 
-async function registerBlockchainAccount(username, referer, public_key, signature_hash, signed_doc) {
+async function registerBlockchainAccount(data) {
   const eos = await getInstance(process.env.REGISTRATOR_WIF)
 
   let newaccount = {
-     registrator: process.env.REGISTRATOR,
-     referer: referer ? referer : "",
-     username: username,
-     public_key: public_key,
-     signature_hash: signature_hash,
+     registrator: process.env.COOPNAME,
+     referer: data.referer ? data.referer : "",
+     username: data.username,
+     public_key: data.public_key,
+     signature_hash: data.signature_hash,
      meta: ""
   }
+
+  console.log("data on register: ", data)
+
+  data.document.meta = JSON.stringify(data.document.meta)
+
   const uid = ""
 
   let actions = [{
     account: process.env.REGISTRATOR_CONTRACT,
     name: 'newaccount',
     authorization: [{
-      actor: process.env.REGISTRATOR,
+      actor: process.env.COOPNAME,
       permission: 'active',
     }],
     data: newaccount,
@@ -83,15 +88,15 @@ async function registerBlockchainAccount(username, referer, public_key, signatur
     name: 'reguser',
     authorization: [
       {
-        actor: process.env.REGISTRATOR,
+        actor: process.env.COOPNAME,
         permission: 'active',
       },
     ],
     data: {
-      coopname: process.env.REGISTRATOR,
-      username: username,
+      coopname: process.env.COOPNAME,
+      username: data.username,
       storage: {
-        storage_username: process.env.REGISTRATOR,
+        storage_username: process.env.COOPNAME,
         uid,
       },
     },
@@ -101,27 +106,29 @@ async function registerBlockchainAccount(username, referer, public_key, signatur
     name: 'joincoop',
     authorization: [
       {
-        actor: process.env.REGISTRATOR,
+        actor: process.env.COOPNAME,
         permission: 'active',
       },
     ],
     data: {
-      coopname: process.env.REGISTRATOR,
-      username: username,
-      signed_doc: signed_doc,
-      //TODO положить подпись
+      coopname: process.env.COOPNAME,
+      username: data.username,
+      document: data.document,
     },
   }
   ]
   
-  await eos.transact({ 
+  const result = await eos.transact({ 
       actions
   }, {
     blocksBehind: 3,
     expireSeconds: 30,
   })
 
-
+  const batch_id = getInternalAction(result, 'draft').batch_id
+  
+  return batch_id
+  
 }
 
 
@@ -133,7 +140,7 @@ async function createOrder(data) {
     account: process.env.GATEWAY_CONTRACT,
     name: 'dpcreate',
     authorization: [{
-      actor: process.env.REGISTRATOR,
+      actor: process.env.COOPNAME,
       permission: 'active',
     }],
     data
@@ -161,7 +168,7 @@ async function completeOrder(data) {
     account: process.env.GATEWAY_CONTRACT,
     name: 'dpcomplete',
     authorization: [{
-      actor: process.env.REGISTRATOR,
+      actor: process.env.COOPNAME,
       permission: 'active',
     }],
     data
@@ -184,7 +191,7 @@ async function failOrder(data) {
     account: process.env.GATEWAY_CONTRACT,
     name: 'dpfail',
     authorization: [{
-      actor: process.env.REGISTRATOR,
+      actor: process.env.COOPNAME,
       permission: 'active',
     }],
     data
@@ -199,13 +206,28 @@ async function failOrder(data) {
 
 }
 
+
+async function getSoviet(coopname) {
+  const api = await getApi()
+  
+  const soviet = (await lazyFetch(
+    api,
+    process.env.SOVIET_CONTRACT,
+    coopname,
+    'boards',
+  ))[0]
+
+  return soviet
+
+}
+
 async function fetchAllParticipants() {
   const api = await getApi()
   
   const participants = await lazyFetch(
     api,
     process.env.SOVIET_CONTRACT,
-    process.env.REGISTRATOR,
+    process.env.COOPNAME,
     'participants',
   )
   return participants
@@ -259,5 +281,6 @@ module.exports = {
   createOrder,
   getCooperative,
   failOrder,
-  completeOrder
+  completeOrder,
+  getSoviet
 }

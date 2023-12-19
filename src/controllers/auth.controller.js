@@ -1,23 +1,24 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const { authService, userService, tokenService, emailService } = require('../services');
+const { authService, userService, tokenService, emailService, blockchainService } = require('../services');
 const { orderService } = require('../services');
 
 const register = catchAsync(async (req, res) => {
-
-  console.log("on create User")
   
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
   
-  const order = await orderService.createInitialOrder(req.body.username);
+  const batch_id = await blockchainService.registerBlockchainAccount(req.body)
+  
+  const order = await orderService.createInitialOrder(req.body.username, batch_id);
 
   res.status(httpStatus.CREATED).send({user, tokens, order});
 });
 
+
 const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
+  const { username, password } = req.body;
+  const user = await authService.loginUserWithUsernameAndPassword(username, password);
 
   if (user.is_registered === false)
     throw new Error('Аккаунт в блокчейне для пользователя не зарегистрирован (или не оплачен)')

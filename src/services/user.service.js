@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
-const { registerBlockchainAccount } = require('./blockchain.service')
+
 /**
  * Create a user
  * @param {Object} userBody
@@ -11,8 +11,6 @@ const createUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  
-  await registerBlockchainAccount(userBody.username, userBody.referer, userBody.public_key, userBody.signature_hash, userBody.signed_doc)
   
   return User.create(userBody);
 };

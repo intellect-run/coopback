@@ -17,21 +17,23 @@ const register = {
       middle_name: Joi.string().required(),
       birthday: Joi.string().required(),
       phone: Joi.string().required(),
+      email: Joi.string().required()
     }),
     organization_profile: Joi.object().keys({
       
     }),
-    signed_doc: Joi.object().keys({
+    document: Joi.object().keys({
       hash: Joi.string().required(),
       sign: Joi.string().required(),
-      pkey: Joi.string().required()
+      pkey: Joi.string().required(),
+      meta: Joi.object()
     })
   }),
 };
 
 const login = {
   body: Joi.object().keys({
-    email: Joi.string().required(),
+    username: Joi.string().required(),
     password: Joi.string().required(),
   }),
 };

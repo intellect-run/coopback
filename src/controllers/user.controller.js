@@ -13,7 +13,7 @@ const createUser = catchAsync(async (req, res) => {
 const getUsers = catchAsync(async (req, res) => {
 
   const participants = await blockchainService.fetchAllParticipants()
-  
+  console.log("participants: ", participants)
   for (participant of participants) {
     participant.data = await userService.getUserByUsername(participant.username);
   }
