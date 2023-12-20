@@ -78,9 +78,8 @@ async function getPDFHash(draft, vars, translation) {
 
         const content = renderTemplate(draft, vars, translation);
         const buffer = await convertToPDF(content);
-        console.log("arrayBuffer: ", buffer)
         const sha = ecc.sha256(buffer);
-        console.log('sha256: ', sha)
+        
 
         return sha;
     } catch (err) {
@@ -92,7 +91,7 @@ async function getPDFHash(draft, vars, translation) {
 
 async function downloadPDF(draft, vars, translation, filename = 'document.pdf') {
     try {
-        console.log("here on down", draft, vars, translation)
+        
         const content = renderTemplate(draft, vars, translation);
         const buffer = await convertToPDF(content);
         
@@ -126,14 +125,12 @@ async function updateMetadata(pdfBuffer, meta) {
 }
 
 async function convertToPDF(content, meta) {
-    console.log("meta on convert: ", meta)
-
     return new Promise(async (resolve, reject) => {
         try {
             const html_to_pdf = require('html-pdf-node');
             
             let options = { 
-                format: 'A4', 
+                format: 'A4',
                 margin: {
                     top: 10,
                     bottom: 10,
@@ -147,6 +144,7 @@ async function convertToPDF(content, meta) {
             
             const pdfBuffer = await html_to_pdf.generatePdf(file, options)
             const cleanPDFBuffer = await updateMetadata(pdfBuffer, meta)
+
             resolve(cleanPDFBuffer)
 
 

@@ -3,7 +3,7 @@ const ecc = require('eosjs-ecc');
 const ApiError = require('../utils/ApiError');
 const { userService, blockchainService } = require('../services');
 
-const getCoopInfo = async (api, coopname) => {
+const getActualCoopInfo = async (api, coopname) => {
   
   let coop = await userService.getUserByUsername(coopname)
   const [bc_coop] = await blockchainService.lazyFetch(api, process.env.REGISTRATOR_CONTRACT, process.env.REGISTRATOR_CONTRACT, 'orgs', coopname, coopname, 1)  
@@ -30,8 +30,40 @@ const getCoopInfo = async (api, coopname) => {
       soviet
     }
 
-    console.log("data: ", data)
+    return data
 
+  } else {
+    throw new Error('Кооператив не найден')
+  }
+
+}
+
+const getHistoryCoopInfo = async (api, coopname, created_at) => {
+  
+  let coop = await userService.getUserByUsername(coopname)
+  const [bc_coop] = await blockchainService.lazyFetch(api, process.env.REGISTRATOR_CONTRACT, process.env.REGISTRATOR_CONTRACT, 'orgs', coopname, coopname, 1)  
+  
+  let data = {}
+
+  //TODO delete it after base coop registration
+  coop = {
+    organization_profile: {
+      shortname: 'Потребительский Кооператив ПРИМЕР',
+      city: "Москва"
+    }
+  }
+
+  if (coop && bc_coop) {
+    
+    const soviet = await loadSoviet(api, coopname)
+
+    data = {
+      shortname: coop.organization_profile.shortname,
+      city: coop.organization_profile.city,
+      initial: parseFloat(bc_coop.initial).toFixed(0),
+      minimum: parseFloat(bc_coop.minimum).toFixed(0),
+      soviet
+    }
     return data
 
   } else {
@@ -183,6 +215,7 @@ module.exports = {
   loadAgenda,
   loadStaff,
   loadMembers,
-  getCoopInfo,
+  getActualCoopInfo,
+  getHistoryCoopInfo,
   getDecision
 }

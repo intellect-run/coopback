@@ -17,7 +17,7 @@ router
 
 router
   .route('/regenerate')
-  .post(auth('generateDecisions'), validate(documentValidation.regenerateDocument), docController.regenerateDocument)
+  .post(auth(), validate(documentValidation.regenerateDocument), docController.regenerateDocument)
 
 router
   .route('/get')

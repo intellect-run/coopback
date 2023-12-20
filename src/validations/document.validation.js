@@ -34,7 +34,7 @@ const regenerateDocument = {
   body: Joi.object().keys({
     coopname: Joi.string().required(),
     username: Joi.string().required(),
-    action: Joi.string().required().valid('joincoop'),
+    action: Joi.string().required().valid('joincoop', 'joincoopdec'),
     doc: Joi.object().keys({
       sign: Joi.string().required(),
       pkey: Joi.string().required(),
