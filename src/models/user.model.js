@@ -112,6 +112,14 @@ userSchema.plugin(paginate);
  */
 userSchema.statics.isEmailTaken = async function (email, excludeUsername) {
   const user = await this.findOne({ email, _id: { $ne: excludeUsername } });
+
+  // Если пользователь найден и is_registered == false, удаляем его
+  if (user && !user.is_registered) {
+    await this.deleteOne({ _id: user._id });
+    return false;
+  }
+
+  // Если пользователь не найден или is_registered == true, проверяем email
   return !!user;
 };
 

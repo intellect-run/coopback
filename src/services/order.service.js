@@ -62,7 +62,7 @@ async function createInitialOrder(username, batch_id) {
     memo: ""
   }
   const order_id = await blockchainService.createOrder(order)
-  console.log("order_id: ", order_id)
+  
   // 4. Обновляешь ордер идентификатором ордера в блокчейне (order_id)  
   await Order.updateOne({_id: internal_id}, {order_id})
   
@@ -78,7 +78,7 @@ async function catchIPN(ipnBody) {
 
   const payments = await mongoose.connection.db.collection('payments')
   const exist = await payments.findOne({"object.id": ipnBody.object.id})
-  console.log(ipnBody)
+  
 
   if (!exist) {
 
@@ -110,7 +110,6 @@ async function catchIPN(ipnBody) {
 
           } catch(e) {
 
-            console.log('catch error: ', e.message)
             order.error = e
             order.delivered = false
             await order.save()
