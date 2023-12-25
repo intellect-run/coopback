@@ -92,6 +92,7 @@ const regenerateDocument = async (coopname, username, action, doc) => {
       const bodyContent = await getBody(content);
 
       const buffer = await convertToPDF(content, data.meta);
+      console.log("buffer: ", buffer)
       
       const hash = ecc.sha256(buffer);
       

@@ -12,7 +12,7 @@ const updateAuth = async () => {
   const board = await blockchainService.getSoviet(process.env.COOPNAME);
   
   //TODO снимать права с тех, кто уже не в совете
-
+  
   for (const member of board.members) {
     const user = await userService.getUserByUsername(member.username);   
 

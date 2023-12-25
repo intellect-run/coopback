@@ -144,7 +144,7 @@ async function convertToPDF(content, meta) {
             
             const pdfBuffer = await html_to_pdf.generatePdf(file, options)
             const cleanPDFBuffer = await updateMetadata(pdfBuffer, meta)
-
+            
             resolve(cleanPDFBuffer)
 
 
